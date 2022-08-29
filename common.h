@@ -117,6 +117,8 @@ const u32_t conv_timeout=180000;
 const int max_conv_num=10000;
 const int max_conn_num=200;
 
+const int max_remote_num=10;
+
 /*
 const u32_t max_handshake_conn_num=10000;
 const u32_t max_ready_conn_num=1000;

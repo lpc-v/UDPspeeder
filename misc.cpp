@@ -62,6 +62,8 @@ int persist_tun=0;
 
 char rs_par_str[rs_str_len]="20:10";
 
+int socket_num=1;
+
 
 int from_normal_to_fec(conn_info_t & conn_info,char *data,int len,int & out_n,char **&out_arr,int *&out_len,my_time_t *&out_delay)
 {
@@ -647,6 +649,7 @@ void process_arg(int argc, char *argv[])
 		{"disable-checksum", no_argument,    0, 1},
 		{"fix-latency", no_argument,    0, 1},
 		{"sock-buf", required_argument,    0, 1},
+		{"sock-num", required_argument, 0,1},
 		{"random-drop", required_argument,    0, 1},
 		{"report", required_argument,    0, 1},
 		{"delay-capacity", required_argument,    0, 1},
@@ -931,6 +934,16 @@ void process_arg(int argc, char *argv[])
 					myexit(-1);
 				}
 				mylog(log_info,"decode-buf=%d\n",fec_buff_num);
+			}
+			else if(strcmp(long_options[option_index].name, "sock-num")==0)
+			{
+				sscanf(optarg,"%d",&socket_num);
+				if(socket_num<1 || socket_num > max_remote_num)
+				{
+					mylog(log_fatal,"socket num error");
+					myexit(-1);
+				}
+				mylog(log_info,"sock-num=%d\n", socket_num);
 			}
 			else if(strcmp(long_options[option_index].name,"mode")==0)
 			{

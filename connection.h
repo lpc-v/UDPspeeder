@@ -298,6 +298,9 @@ struct conn_info_t:not_copy_able_t     //stores info for a raw connection.for cl
 	struct ev_loop* loop=0;
 	int local_listen_fd;
 
+	int remote_fds[max_remote_num];
+	fd64_t remote_fd64s[max_remote_num];
+
 	int remote_fd;  //only used for client
 	fd64_t remote_fd64;//only used for client
 

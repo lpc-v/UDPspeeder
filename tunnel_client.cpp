@@ -1,8 +1,14 @@
 #include "tunnel.h"
 
+int socket_counter=-1;
+
 void data_from_local_or_fec_timeout(conn_info_t & conn_info,int is_time_out)
 {
-	fd64_t &remote_fd64=conn_info.remote_fd64;
+	socket_counter++;
+	fd64_t &remote_fd64=conn_info.remote_fd64s[socket_counter%socket_num];
+	int &remote_fd=conn_info.remote_fds[socket_counter%socket_num];
+	mylog(log_info, "choose fd64:%llu\n", remote_fd64);
+	// fd64_t &remote_fd64=conn_info.remote_fd64;
 	int & local_listen_fd=conn_info.local_listen_fd;
 
 	char data[buf_len];
@@ -13,6 +19,7 @@ void data_from_local_or_fec_timeout(conn_info_t & conn_info,int is_time_out)
 	dest_t dest;
 	dest.type=type_fd64;
 	dest.inner.fd64=remote_fd64;
+	// dest.inner.fd=remote_fd;
 	dest.cook=1;
 
 	if(is_time_out)
@@ -87,7 +94,7 @@ void data_from_local_or_fec_timeout(conn_info_t & conn_info,int is_time_out)
 		conn_info.conv_manager.c.update_active_time(conv);
 		char * new_data;
 		int new_len;
-		put_conv(conv,data,data_len,new_data,new_len);
+		put_conv(conv,data,data_len,new_data,new_len);  // 在data前面加入32位conv，得到new_data
 
 
 		mylog(log_trace,"data_len=%d new_len=%d\n",data_len,new_len);
@@ -124,28 +131,29 @@ static void remote_cb(struct ev_loop *loop, struct ev_io *watcher, int revents)
 	fd64_t &remote_fd64=conn_info.remote_fd64;
 	int &remote_fd=conn_info.remote_fd;
 
-	assert(watcher->u64==remote_fd64);
+	// assert(watcher->u64==remote_fd64);
 
-	int fd=fd_manager.to_fd(remote_fd64);
+	int fd=fd_manager.to_fd(watcher->u64);
+	mylog(log_info, "fd:%d, fd64:%llu, watcher_fd:%d\n", fd, watcher->u64, watcher->fd);
 
 	int data_len =recv(fd,data,max_data_len+1,0);
 
 	if(data_len==max_data_len+1)
-        {
-                mylog(log_warn,"huge packet, data_len > %d, packet truncated, dropped\n",max_data_len);
-                return ;
-        }
+	{
+		mylog(log_warn,"huge packet, data_len > %d, packet truncated, dropped\n",max_data_len);
+		return ;
+	}
 
 
-	mylog(log_trace, "received data from udp fd %d, len=%d\n", remote_fd,data_len);
+	mylog(log_trace, "received data from udp fd %d, len=%d\n", fd,data_len);
 	if(data_len<0)
 	{
 		if(get_sock_errno()==ECONNREFUSED)
 		{
-			mylog(log_debug, "recv failed %d ,udp_fd%d,errno:%s\n", data_len,remote_fd,get_sock_error());
+			mylog(log_debug, "recv failed %d ,udp_fd%d,errno:%s\n", data_len,fd,get_sock_error());
 		}
 
-		mylog(log_warn, "recv failed %d ,udp_fd%d,errno:%s\n", data_len,remote_fd,get_sock_error());
+		mylog(log_warn, "recv failed %d ,udp_fd%d,errno:%s\n", data_len,fd,get_sock_error());
 		return;
 	}
 	if(!disable_mtu_warn&&data_len>mtu_warn)
@@ -314,6 +322,48 @@ int tunnel_client_event_loop()
 
 	mylog(log_debug,"remote_fd64=%llu\n",remote_fd64);
 
+	struct ev_io watchers[max_remote_num];
+	// todo max_remote_num
+	for (i = 0; i < socket_num; i++) {
+		int & fd = conn_info.remote_fds[i];
+		fd64_t &fd64 = conn_info.remote_fd64s[i];
+		new_connected_socket2(fd, remote_addr, out_addr, out_interface);
+		fd64 = fd_manager.create(fd);
+		mylog(log_info, "init no.%d socket, fd:%d, fd64:%llu\n", i, fd, fd64);
+
+		// struct ev_io watcher;
+		watchers[i].data=&conn_info;
+		watchers[i].u64=fd64;
+
+		mylog(log_info, "remote_watcher fd:%d\n", fd);
+		ev_io_init(&watchers[i], remote_cb, fd, EV_READ);
+		ev_io_start(loop, &watchers[i]);
+	}
+
+	
+	// int &sock_fd0 = conn_info.remote_fds[0];
+	// fd64_t &sock_fd640 = conn_info.remote_fd64s[0];
+	// new_connected_socket2(sock_fd0, remote_addr, out_addr, out_interface);
+	// sock_fd640 = fd_manager.create(sock_fd0);
+	// struct ev_io watcher0;
+	// watcher0.data = &conn_info;
+	// watcher0.u64 = sock_fd640;
+	// ev_io_init(&watcher0, remote_cb, sock_fd0, EV_READ);
+	// ev_io_start(loop, &watcher0);
+
+	// int &sock_fd1 = conn_info.remote_fds[1];
+	// fd64_t &sock_fd641 = conn_info.remote_fd64s[1];
+	// new_connected_socket2(sock_fd1, remote_addr, out_addr, out_interface);
+	// sock_fd641 = fd_manager.create(sock_fd1);
+	// struct ev_io watcher1;
+	// watcher1.data = &conn_info;
+	// watcher1.u64 = sock_fd641;
+	// ev_io_init(&watcher1, remote_cb, sock_fd1, EV_READ);
+	// ev_io_start(loop, &watcher1);
+
+	for(i = 0; i < socket_num; i++) {
+		mylog(log_info, "remote_fds[%d]=%d fd64=%llu\n", i, conn_info.remote_fds[i], conn_info.remote_fd64s[i]);
+	}
 	//ev.events = EPOLLIN;
 	//ev.data.u64 = remote_fd64;
 
