@@ -201,6 +201,7 @@ static void remote_cb(struct ev_loop *loop, struct ev_io *watcher, int revents)
 		dest.inner.fd_addr.addr=addr;
 		dest.type=type_fd_addr;
 
+		mylog(log_info,"reply to %s\n", addr.get_str());
 		delay_send(out_delay[i],dest,new_data,new_len);
 	}
 }
