@@ -7,7 +7,7 @@ void data_from_local_or_fec_timeout(conn_info_t & conn_info,int is_time_out)
 	socket_counter++;
 	fd64_t &remote_fd64=conn_info.remote_fd64s[socket_counter%socket_num];
 	int &remote_fd=conn_info.remote_fds[socket_counter%socket_num];
-	mylog(log_info, "choose fd64:%llu\n", remote_fd64);
+	// mylog(log_info, "choose fd64:%llu fd:%d\n", remote_fd64, remote_fd);
 	// fd64_t &remote_fd64=conn_info.remote_fd64;
 	int & local_listen_fd=conn_info.local_listen_fd;
 
@@ -104,6 +104,9 @@ void data_from_local_or_fec_timeout(conn_info_t & conn_info,int is_time_out)
 
 	}
 	mylog(log_trace,"out_n=%d\n",out_n);
+	if(out_n > 0) {
+		mylog(log_info,"send packet through fd %d\n", remote_fd);
+	}
 	for(int i=0;i<out_n;i++)
 	{
 		delay_send(out_delay[i],dest,out_arr[i],out_len[i]);

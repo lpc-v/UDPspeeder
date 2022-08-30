@@ -235,7 +235,7 @@ static void local_listen_cb(struct ev_loop *loop, struct ev_io *watcher, int rev
 			mylog(log_debug,"get_conv failed");
 			continue;
 		}
-
+		
 
 		if (!conn_info.conv_manager.s.is_conv_used(conv))
 		{
@@ -258,6 +258,7 @@ static void local_listen_cb(struct ev_loop *loop, struct ev_io *watcher, int rev
 			//ev.data.u64 = fd64;
 			//ret = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, new_udp_fd, &ev);
 
+			// mylog(log_info,"get_conv() %d is not used, need to create fd64 %llu(fd %d) and insert to conv\n", conv,fd64 new_udp_fd);
 			conn_info.conv_manager.s.insert_conv(conv, fd64);
 			fd_manager.get_info(fd64).addr=addr;
 
