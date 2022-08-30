@@ -44,6 +44,7 @@ void data_from_remote_or_fec_timeout_or_conn_timer(conn_info_t & conn_info,fd64_
 
 	if(mode==is_fec_timeout)
 	{
+		mylog(log_info,"server fd cb(timeout),reply to %s\n",dest.inner.fd_addr.addr.get_str());
 		assert(fd64==0);
 		//uint64_t value;
 		//if((ret=read(fd_manager.to_fd(fd64), &value, 8))!=8)
@@ -75,6 +76,7 @@ void data_from_remote_or_fec_timeout_or_conn_timer(conn_info_t & conn_info,fd64_
 	}
 	else if(mode==is_from_remote)
 	{
+		mylog(log_info,"server fd cb(remote),reply to %s\n",dest.inner.fd_addr.addr.get_str());
 		if(!fd_manager.exist(fd64))   //fd64 has been closed
 		{
 			mylog(log_warn,"!fd_manager.exist(fd64)\n");
@@ -156,7 +158,7 @@ static void local_listen_cb(struct ev_loop *loop, struct ev_io *watcher, int rev
 	address_t addr;
 	addr.from_sockaddr((struct sockaddr *) &udp_new_addr_in,udp_new_addr_len);
 
-	mylog(log_trace,"Received packet from %s,len: %d\n", addr.get_str(),data_len);
+	mylog(log_info,"Received packet from %s,len: %d\n", addr.get_str(),data_len);
 
 	if(!disable_mtu_warn&&data_len>=mtu_warn)///////////////////////delete this for type 0 in furture
 	{
