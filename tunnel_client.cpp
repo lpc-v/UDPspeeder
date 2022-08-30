@@ -70,6 +70,7 @@ void data_from_local_or_fec_timeout(conn_info_t & conn_info,int is_time_out)
 
 
 		addr.from_sockaddr((struct sockaddr *) &udp_new_addr_in,udp_new_addr_len);
+		mylog(log_info, "receive packet addr=%s:%d\n", addr.get_ip(), addr.get_port());
 
 		mylog(log_trace,"Received packet from %s, len: %d\n", addr.get_str(),data_len);
 
@@ -77,6 +78,7 @@ void data_from_local_or_fec_timeout(conn_info_t & conn_info,int is_time_out)
 
 		if(!conn_info.conv_manager.c.is_data_used(addr))
 		{
+			mylog(log_info, "addr has no conv, need to generate new conv\n");
 			if(conn_info.conv_manager.c.get_size() >=max_conv_num)
 			{
 				mylog(log_warn,"ignored new udp connect bc max_conv_num exceed\n");
