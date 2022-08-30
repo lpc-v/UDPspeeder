@@ -271,7 +271,7 @@ static void local_listen_cb(struct ev_loop *loop, struct ev_io *watcher, int rev
 			ev_io_start(conn_info.loop,&io_watcher);
 
 
-			mylog(log_info,"[%s]new conv %x,fd %d created,fd64=%llu\n",addr.get_str(),conv,new_udp_fd,fd64);
+			mylog(log_info,"[%s]new conv %x,fd %d created,fd64=%llu,conn addr %s\n",addr.get_str(),conv,new_udp_fd,fd64, conn_info.addr.get_str());
 		}
 		conn_info.conv_manager.s.update_active_time(conv);
 		fd64_t fd64= conn_info.conv_manager.s.find_data_by_conv(conv);
