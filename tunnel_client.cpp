@@ -4,9 +4,7 @@ int socket_counter=-1;
 
 void data_from_local_or_fec_timeout(conn_info_t & conn_info,int is_time_out)
 {
-	socket_counter++;
-	fd64_t &remote_fd64=conn_info.remote_fd64s[socket_counter%socket_num];
-	int &remote_fd=conn_info.remote_fds[socket_counter%socket_num];
+	
 	// mylog(log_info, "choose fd64:%llu fd:%d\n", remote_fd64, remote_fd);
 	// fd64_t &remote_fd64=conn_info.remote_fd64;
 	int & local_listen_fd=conn_info.local_listen_fd;
@@ -16,11 +14,7 @@ void data_from_local_or_fec_timeout(conn_info_t & conn_info,int is_time_out)
 	address_t addr;
 	u32_t conv;
 	int  out_n;char **out_arr;int *out_len;my_time_t *out_delay;
-	dest_t dest;
-	dest.type=type_fd64;
-	dest.inner.fd64=remote_fd64;
-	// dest.inner.fd=remote_fd;
-	dest.cook=1;
+	
 
 	if(is_time_out)
 	{
@@ -104,9 +98,17 @@ void data_from_local_or_fec_timeout(conn_info_t & conn_info,int is_time_out)
 
 	}
 	mylog(log_trace,"out_n=%d\n",out_n);
-	if(out_n > 0) {
+	dest_t dest;
+	if(out_n > 0) {  // 有数据要发送
+		socket_counter=(socket_counter+1)%socket_num;
+		fd64_t &remote_fd64=conn_info.remote_fd64s[socket_counter];
+		int &remote_fd=conn_info.remote_fds[socket_counter];
+		dest.type=type_fd64;
+		dest.inner.fd64=remote_fd64;
+		// dest.inner.fd=remote_fd;
+		dest.cook=1;
 		mylog(log_info,"send packet through fd %d\n", remote_fd);
-	}
+	}	
 	for(int i=0;i<out_n;i++)
 	{
 		delay_send(out_delay[i],dest,out_arr[i],out_len[i]);
@@ -130,7 +132,7 @@ static void remote_cb(struct ev_loop *loop, struct ev_io *watcher, int revents)
 	char data[buf_len];
 	if(!fd_manager.exist(watcher->u64))   //fd64 has been closed
 	{
-		mylog(log_trace,"!fd_manager.exist(events[idx].data.u64)");
+		mylog(log_info,"!fd_manager.exist(events[idx].data.u64)");
 		return;
 	}
 	fd64_t &remote_fd64=conn_info.remote_fd64;
@@ -155,7 +157,7 @@ static void remote_cb(struct ev_loop *loop, struct ev_io *watcher, int revents)
 	{
 		if(get_sock_errno()==ECONNREFUSED)
 		{
-			mylog(log_debug, "recv failed %d ,udp_fd%d,errno:%s\n", data_len,fd,get_sock_error());
+			mylog(log_info, "recv failed %d ,udp_fd%d,errno:%s\n", data_len,fd,get_sock_error());
 		}
 
 		mylog(log_warn, "recv failed %d ,udp_fd%d,errno:%s\n", data_len,fd,get_sock_error());
@@ -168,7 +170,7 @@ static void remote_cb(struct ev_loop *loop, struct ev_io *watcher, int revents)
 
 	if(de_cook(data,data_len)!=0)
 	{
-		mylog(log_debug,"de_cook error");
+		mylog(log_info,"de_cook error");
 		return;
 	}
 
@@ -184,12 +186,12 @@ static void remote_cb(struct ev_loop *loop, struct ev_io *watcher, int revents)
 		int new_len;
 		if(get_conv(conv,out_arr[i],out_len[i],new_data,new_len)!=0)
 		{
-			mylog(log_debug,"get_conv(conv,out_arr[i],out_len[i],new_data,new_len)!=0");
+			mylog(log_info,"get_conv(conv,out_arr[i],out_len[i],new_data,new_len)!=0");
 			continue;
 		}
 		if(!conn_info.conv_manager.c.is_conv_used(conv))
 		{
-			mylog(log_trace,"!conn_info.conv_manager.is_conv_used(conv)");
+			mylog(log_info,"!conn_info.conv_manager.is_conv_used(conv)");
 			continue;
 		}
 
