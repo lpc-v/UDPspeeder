@@ -193,6 +193,7 @@ int my_send(const dest_t &dest,char *data,int len)
 	{
 		case type_fd_addr:
 		{
+			mylog(log_info,"did reply!!!\n");
 			return sendto_fd_addr(dest.inner.fd,dest.inner.fd_addr.addr,data,len,0);
 			break;
 		}
