@@ -306,6 +306,8 @@ struct conn_info_t:not_copy_able_t     //stores info for a raw connection.for cl
 
 	//ip_port_t ip_port;
 	address_t  addr;//only used for server
+	address_t  addrs[max_remote_num];//only server
+	int        n_addr=0;
 
 	conn_info_t()
 	{
@@ -327,6 +329,16 @@ struct conn_info_t:not_copy_able_t     //stores info for a raw connection.for cl
 	void update_active_time()
 	{
 		last_active_time=get_current_time();
+	}
+	bool exist_addr(address_t a){
+		for(int i=0;i<n_addr;i++)
+		{
+			if(a==addrs[i])
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 	/*
 	conn_info_t(const conn_info_t &b)

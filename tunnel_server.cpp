@@ -12,7 +12,7 @@ static void fec_encode_cb(struct ev_loop *loop, struct ev_timer *watcher, int re
 static void remote_cb(struct ev_loop *loop, struct ev_io *watcher, int revents);
 
 enum tmp_mode_t{is_from_remote=0,is_fec_timeout,is_conn_timer};
-
+int addr_counter = 0;
 void data_from_remote_or_fec_timeout_or_conn_timer(conn_info_t & conn_info,fd64_t fd64,tmp_mode_t mode)
 {
 	int ret;
@@ -29,8 +29,10 @@ void data_from_remote_or_fec_timeout_or_conn_timer(conn_info_t & conn_info,fd64_
 
 
 	//conn_info_t &conn_info=conn_manager.find(ip_port);
-	address_t &addr=conn_info.addr;
-	assert(conn_manager.exist(addr));
+	// 轮询每个addr
+	address_t &addr=conn_info.addrs[addr_counter++%conn_info.n_addr];
+	address_t &addr_ori=conn_info.addr;
+	assert(conn_manager.exist(addr_ori));
 
 	int &local_listen_fd=conn_info.local_listen_fd;
 
@@ -139,27 +141,33 @@ static void local_listen_cb(struct ev_loop *loop, struct ev_io *watcher, int rev
 	int ret;
 
 	mylog(log_trace,"events[idx].data.u64 == (u64_t)local_listen_fd\n");
-	char data[buf_len];
+	char all_data[buf_len];
 	int data_len;
 	address_t::storage_t udp_new_addr_in={0};
 	socklen_t udp_new_addr_len = sizeof(address_t::storage_t);
-	if ((data_len = recvfrom(local_listen_fd, data, max_data_len+1, 0,
+	if ((data_len = recvfrom(local_listen_fd, all_data, max_data_len+1, 0,
 			(struct sockaddr *) &udp_new_addr_in, &udp_new_addr_len)) == -1) {
 		mylog(log_error,"recv_from error,this shouldnt happen,err=%s,but we can try to continue\n",get_sock_error());
 		return;
 	};
+	u32_t tag = read_u32(all_data);
+	data_len = data_len - sizeof(u32_t);
+	char data[buf_len];
+	// char *data = all_data + sizeof(u32_t);
+	memcpy(data,all_data+sizeof(u32_t),data_len);
+
 
 	if(data_len==max_data_len+1)
-        {
-                mylog(log_warn,"huge packet, data_len > %d, packet truncated, dropped\n",max_data_len);
-                return ;
-        }
+	{
+		mylog(log_warn,"huge packet, data_len > %d, packet truncated, dropped\n",max_data_len);
+		return ;
+	}
 
 	address_t addr;
 	addr.from_sockaddr((struct sockaddr *) &udp_new_addr_in,udp_new_addr_len);
-
-	mylog(log_info,"Received packet from %s,len: %d\n", addr.get_str(),data_len);
-
+	address_t real_addr = addr;
+	mylog(log_info,"Received packet from %s,len: %d,tag: %d\n", addr.get_str(),data_len,tag);
+	addr.set_port(int(tag));
 	if(!disable_mtu_warn&&data_len>=mtu_warn)///////////////////////delete this for type 0 in furture
 	{
 		mylog(log_warn,"huge packet,data len=%d (>=%d).strongly suggested to set a smaller mtu at upper level,to get rid of this warn\n ",data_len,mtu_warn);
@@ -168,7 +176,7 @@ static void local_listen_cb(struct ev_loop *loop, struct ev_io *watcher, int rev
 
 	if(de_cook(data,data_len)!=0)
 	{
-		mylog(log_debug,"de_cook error");
+		mylog(log_info,"de_cook error");
 		return;
 	}
 
@@ -185,6 +193,9 @@ static void local_listen_cb(struct ev_loop *loop, struct ev_io *watcher, int rev
 		//conn_manager.insert(addr);
 		conn_info_t &conn_info=conn_manager.find_insert(addr);
 		conn_info.addr=addr;
+		assert(conn_info.n_addr==0);
+		conn_info.addrs[0]=real_addr;
+		conn_info.n_addr++;
 		conn_info.loop=ev_default_loop(0);
 		conn_info.local_listen_fd=local_listen_fd;
 
@@ -219,7 +230,11 @@ static void local_listen_cb(struct ev_loop *loop, struct ev_io *watcher, int rev
 
 	}
 	conn_info_t &conn_info=conn_manager.find_insert(addr);
-
+	if(!conn_info.exist_addr(real_addr))
+	{
+		conn_info.addrs[conn_info.n_addr++]=real_addr;
+		mylog(log_info,"tag exist,new socket %s, total socket: %d\n",real_addr.get_str(),conn_info.n_addr);
+	}
 	conn_info.update_active_time();
 	int  out_n;char **out_arr;int *out_len;my_time_t *out_delay;
 	from_fec_to_normal(conn_info,data,data_len,out_n,out_arr,out_len,out_delay);

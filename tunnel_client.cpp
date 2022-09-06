@@ -109,6 +109,8 @@ void data_from_local_or_fec_timeout(conn_info_t & conn_info,int is_time_out)
 		dest.cook=1;
 		mylog(log_info,"send packet through fd %d\n", remote_fd);
 	}	
+	char **new_out_arr;
+
 	for(int i=0;i<out_n;i++)
 	{
 		delay_send(out_delay[i],dest,out_arr[i],out_len[i]);
@@ -129,7 +131,7 @@ static void remote_cb(struct ev_loop *loop, struct ev_io *watcher, int revents)
 
 	conn_info_t & conn_info= *((conn_info_t*)watcher->data);
 
-	char data[buf_len];
+	char raw_data[buf_len];
 	if(!fd_manager.exist(watcher->u64))   //fd64 has been closed
 	{
 		mylog(log_info,"!fd_manager.exist(events[idx].data.u64)");
@@ -143,7 +145,11 @@ static void remote_cb(struct ev_loop *loop, struct ev_io *watcher, int revents)
 	int fd=fd_manager.to_fd(watcher->u64);
 	mylog(log_info, "fd:%d, fd64:%llu, watcher_fd:%d\n", fd, watcher->u64, watcher->fd);
 
-	int data_len =recv(fd,data,max_data_len+1,0);
+	int data_len =recv(fd,raw_data,max_data_len+1,0);
+
+	char data[buf_len];
+	data_len = data_len - sizeof(u32_t);
+	memcpy(data,raw_data+sizeof(u32_t),data_len);
 
 	if(data_len==max_data_len+1)
 	{
@@ -152,7 +158,7 @@ static void remote_cb(struct ev_loop *loop, struct ev_io *watcher, int revents)
 	}
 
 
-	mylog(log_trace, "received data from udp fd %d, len=%d\n", fd,data_len);
+	mylog(log_info, "received data from udp fd %d, len=%d\n", fd,data_len);
 	if(data_len<0)
 	{
 		if(get_sock_errno()==ECONNREFUSED)
