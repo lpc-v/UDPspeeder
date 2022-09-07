@@ -144,6 +144,7 @@ static void remote_cb(struct ev_loop *loop, struct ev_io *watcher, int revents)
 
 	int fd=fd_manager.to_fd(watcher->u64);
 	mylog(log_info, "fd:%d, fd64:%llu, watcher_fd:%d\n", fd, watcher->u64, watcher->fd);
+	
 
 	int data_len =recv(fd,raw_data,max_data_len+1,0);
 
