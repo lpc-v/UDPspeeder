@@ -63,6 +63,7 @@ int persist_tun=0;
 char rs_par_str[rs_str_len]="20:10";
 
 int socket_num=1;
+int client_tag=777;
 
 
 int from_normal_to_fec(conn_info_t & conn_info,char *data,int len,int & out_n,char **&out_arr,int *&out_len,my_time_t *&out_delay)
@@ -659,6 +660,7 @@ void process_arg(int argc, char *argv[])
 		{"decode-buf", required_argument,   0,1},
 		{"queue-len", required_argument,   0,'q'},
 		{"fec", required_argument,   0,'f'},
+		{"tag", required_argument,0,1},
 		{"jitter", required_argument,   0,'j'},
 		{"out-addr", required_argument,   0,1},
 		{"out-interface", required_argument,    0, 1},
@@ -944,6 +946,11 @@ void process_arg(int argc, char *argv[])
 					myexit(-1);
 				}
 				mylog(log_info,"sock-num=%d\n", socket_num);
+			}
+			else if(strcmp(long_options[option_index].name, "tag")==0)
+			{
+				sscanf(optarg,"%d",&client_tag);
+				mylog(log_info,"client-tag=%d\n", client_tag);
 			}
 			else if(strcmp(long_options[option_index].name,"mode")==0)
 			{
