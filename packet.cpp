@@ -189,16 +189,20 @@ int my_send(const dest_t &dest,char *data,int len)
 	{
 		do_cook(data,len);
 	}
-	char *new_data = (char *)malloc(len+sizeof(u32_t));
-	write_u32(new_data, 777);
-	memcpy(new_data+sizeof(u32_t),data,len);
-	len = len + sizeof(u32_t);
+	if(dest.tag)
+	{
+		char *new_data = (char *)malloc(len+sizeof(u32_t));
+		write_u32(new_data, 777);
+		memcpy(new_data+sizeof(u32_t),data,len);
+		len = len + sizeof(u32_t);
+		data = new_data;
+	}
+	
 	switch(dest.type)
 	{
 		case type_fd_addr:
 		{
-			mylog(log_info,"did reply!!!\n");
-			return sendto_fd_addr(dest.inner.fd,dest.inner.fd_addr.addr,new_data,len,0);
+			return sendto_fd_addr(dest.inner.fd,dest.inner.fd_addr.addr,data,len,0);
 			break;
 		}
 		case type_fd64_addr:
@@ -206,17 +210,17 @@ int my_send(const dest_t &dest,char *data,int len)
 			if(!fd_manager.exist(dest.inner.fd64)) return -1;
 			int fd=fd_manager.to_fd(dest.inner.fd64);
 
-			return sendto_fd_addr(fd,dest.inner.fd64_addr.addr,new_data,len,0);
+			return sendto_fd_addr(fd,dest.inner.fd64_addr.addr,data,len,0);
 			break;
 		}
 		case type_fd:
 		{
-			return send_fd(dest.inner.fd,new_data,len,0);
+			return send_fd(dest.inner.fd,data,len,0);
 			break;
 		}
 		case type_write_fd:
 		{
-			return write(dest.inner.fd,new_data,len);
+			return write(dest.inner.fd,data,len);
 			break;
 		}
 		case type_fd64:
@@ -225,7 +229,7 @@ int my_send(const dest_t &dest,char *data,int len)
 			if(!fd_manager.exist(dest.inner.fd64)) return -1;
 			int fd=fd_manager.to_fd(dest.inner.fd64);
 
-			return send_fd(fd,new_data,len,0);
+			return send_fd(fd,data,len,0);
 			break;
 		}
 		/*
@@ -262,6 +266,7 @@ int my_send(const dest_t &dest,char *data,int len)
 		default:
 			assert(0==1);
 	}
+	free(data);
 	return 0;
 }
 

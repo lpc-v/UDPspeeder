@@ -104,6 +104,7 @@ void data_from_local_or_fec_timeout(conn_info_t & conn_info,int is_time_out)
 		fd64_t &remote_fd64=conn_info.remote_fd64s[socket_counter];
 		int &remote_fd=conn_info.remote_fds[socket_counter];
 		dest.type=type_fd64;
+		dest.tag=1;
 		dest.inner.fd64=remote_fd64;
 		// dest.inner.fd=remote_fd;
 		dest.cook=1;
@@ -131,7 +132,7 @@ static void remote_cb(struct ev_loop *loop, struct ev_io *watcher, int revents)
 
 	conn_info_t & conn_info= *((conn_info_t*)watcher->data);
 
-	char raw_data[buf_len];
+	char data[buf_len];
 	if(!fd_manager.exist(watcher->u64))   //fd64 has been closed
 	{
 		mylog(log_info,"!fd_manager.exist(events[idx].data.u64)");
@@ -146,11 +147,8 @@ static void remote_cb(struct ev_loop *loop, struct ev_io *watcher, int revents)
 	mylog(log_info, "fd:%d, fd64:%llu, watcher_fd:%d\n", fd, watcher->u64, watcher->fd);
 	
 
-	int data_len =recv(fd,raw_data,max_data_len+1,0);
+	int data_len =recv(fd,data,max_data_len+1,0);
 
-	char data[buf_len];
-	data_len = data_len - sizeof(u32_t);
-	memcpy(data,raw_data+sizeof(u32_t),data_len);
 
 	if(data_len==max_data_len+1)
 	{

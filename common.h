@@ -384,6 +384,7 @@ struct dest_t
 	inner_t inner;
 	u32_t conv;
 	int cook=0;
+	int tag=0; // 发送数据时是否要加上tag
 };
 
 struct fd_info_t
