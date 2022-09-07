@@ -46,7 +46,7 @@ void data_from_remote_or_fec_timeout_or_conn_timer(conn_info_t & conn_info,fd64_
 
 	if(mode==is_fec_timeout)
 	{
-		mylog(log_info,"server fd cb(timeout),reply to %s\n",dest.inner.fd_addr.addr.get_str());
+		// mylog(log_info,"server fd cb(timeout),reply to %s\n",dest.inner.fd_addr.addr.get_str());
 		assert(fd64==0);
 		//uint64_t value;
 		//if((ret=read(fd_manager.to_fd(fd64), &value, 8))!=8)
@@ -78,7 +78,7 @@ void data_from_remote_or_fec_timeout_or_conn_timer(conn_info_t & conn_info,fd64_
 	}
 	else if(mode==is_from_remote)
 	{
-		mylog(log_info,"server fd cb(remote),reply to %s\n",dest.inner.fd_addr.addr.get_str());
+		// mylog(log_info,"server fd cb(remote),reply to %s\n",dest.inner.fd_addr.addr.get_str());
 		if(!fd_manager.exist(fd64))   //fd64 has been closed
 		{
 			mylog(log_warn,"!fd_manager.exist(fd64)\n");
@@ -166,7 +166,7 @@ static void local_listen_cb(struct ev_loop *loop, struct ev_io *watcher, int rev
 	address_t addr;
 	addr.from_sockaddr((struct sockaddr *) &udp_new_addr_in,udp_new_addr_len);
 	address_t real_addr = addr;
-	mylog(log_info,"Received packet from %s,len: %d,tag: %d\n", addr.get_str(),data_len,tag);
+	// mylog(log_info,"Received packet from %s,len: %d,tag: %d\n", addr.get_str(),data_len,tag);
 	addr.set_port(int(tag));
 	if(!disable_mtu_warn&&data_len>=mtu_warn)///////////////////////delete this for type 0 in furture
 	{
@@ -233,7 +233,7 @@ static void local_listen_cb(struct ev_loop *loop, struct ev_io *watcher, int rev
 	if(!conn_info.exist_addr(real_addr))
 	{
 		conn_info.addrs[conn_info.n_addr++]=real_addr;
-		mylog(log_info,"tag exist,new socket %s, total socket: %d\n",real_addr.get_str(),conn_info.n_addr);
+		// mylog(log_info,"tag exist,new socket %s, total socket: %d\n",real_addr.get_str(),conn_info.n_addr);
 	}
 	conn_info.update_active_time();
 	int  out_n;char **out_arr;int *out_len;my_time_t *out_delay;

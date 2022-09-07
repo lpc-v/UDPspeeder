@@ -64,7 +64,7 @@ void data_from_local_or_fec_timeout(conn_info_t & conn_info,int is_time_out)
 
 
 		addr.from_sockaddr((struct sockaddr *) &udp_new_addr_in,udp_new_addr_len);
-		mylog(log_info, "receive packet addr=%s:%d\n", addr.get_ip(), addr.get_port());
+		// mylog(log_info, "receive packet addr=%s:%d\n", addr.get_ip(), addr.get_port());
 
 		mylog(log_trace,"Received packet from %s, len: %d\n", addr.get_str(),data_len);
 
@@ -72,7 +72,7 @@ void data_from_local_or_fec_timeout(conn_info_t & conn_info,int is_time_out)
 
 		if(!conn_info.conv_manager.c.is_data_used(addr))
 		{
-			mylog(log_info, "addr has no conv, need to generate new conv\n");
+			// mylog(log_info, "addr has no conv, need to generate new conv\n");
 			if(conn_info.conv_manager.c.get_size() >=max_conv_num)
 			{
 				mylog(log_warn,"ignored new udp connect bc max_conv_num exceed\n");
@@ -108,7 +108,7 @@ void data_from_local_or_fec_timeout(conn_info_t & conn_info,int is_time_out)
 		dest.inner.fd64=remote_fd64;
 		// dest.inner.fd=remote_fd;
 		dest.cook=1;
-		mylog(log_info,"send packet through fd %d\n", remote_fd);
+		// mylog(log_info,"send packet through fd %d\n", remote_fd);
 	}	
 	char **new_out_arr;
 
@@ -144,7 +144,7 @@ static void remote_cb(struct ev_loop *loop, struct ev_io *watcher, int revents)
 	// assert(watcher->u64==remote_fd64);
 
 	int fd=fd_manager.to_fd(watcher->u64);
-	mylog(log_info, "fd:%d, fd64:%llu, watcher_fd:%d\n", fd, watcher->u64, watcher->fd);
+	// mylog(log_info, "fd:%d, fd64:%llu, watcher_fd:%d\n", fd, watcher->u64, watcher->fd);
 	
 
 	int data_len =recv(fd,data,max_data_len+1,0);
@@ -157,7 +157,7 @@ static void remote_cb(struct ev_loop *loop, struct ev_io *watcher, int revents)
 	}
 
 
-	mylog(log_info, "received data from udp fd %d, len=%d\n", fd,data_len);
+	mylog(log_debug, "received data from udp fd %d, len=%d\n", fd,data_len);
 	if(data_len<0)
 	{
 		if(get_sock_errno()==ECONNREFUSED)
@@ -208,7 +208,7 @@ static void remote_cb(struct ev_loop *loop, struct ev_io *watcher, int revents)
 		dest.inner.fd_addr.addr=addr;
 		dest.type=type_fd_addr;
 
-		mylog(log_info,"reply to %s\n", addr.get_str());
+		// mylog(log_info,"reply to %s\n", addr.get_str());
 		delay_send(out_delay[i],dest,new_data,new_len);
 	}
 }
