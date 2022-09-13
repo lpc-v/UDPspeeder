@@ -1,7 +1,7 @@
 #include "tunnel.h"
 
 int socket_counter=-1;
-
+unsigned long long int packet_num = 0;
 void data_from_local_or_fec_timeout(conn_info_t & conn_info,int is_time_out)
 {
 	
@@ -42,6 +42,7 @@ void data_from_local_or_fec_timeout(conn_info_t & conn_info,int is_time_out)
 	}
 	else//events[idx].data.u64 == (u64_t)local_listen_fd
 	{
+		packet_num++;
 		mylog(log_trace,"events[idx].data.u64 == (u64_t)local_listen_fd\n");
 		address_t::storage_t udp_new_addr_in={0};
 		socklen_t udp_new_addr_len = sizeof(address_t::storage_t);

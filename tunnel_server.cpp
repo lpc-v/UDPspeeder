@@ -78,7 +78,7 @@ void data_from_remote_or_fec_timeout_or_conn_timer(conn_info_t & conn_info,fd64_
 	}
 	else if(mode==is_from_remote)
 	{
-		// mylog(log_info,"server fd cb(remote),reply to %s\n",dest.inner.fd_addr.addr.get_str());
+		mylog(log_info,"server receive return packet\n");
 		if(!fd_manager.exist(fd64))   //fd64 has been closed
 		{
 			mylog(log_warn,"!fd_manager.exist(fd64)\n");
@@ -127,6 +127,9 @@ void data_from_remote_or_fec_timeout_or_conn_timer(conn_info_t & conn_info,fd64_
 	}
 
 	mylog(log_trace,"out_n=%d\n",out_n);
+	if (out_n > 0) {
+		mylog(log_info, "send packet to: %s\n", dest.inner.fd_addr.addr.get_str());
+	}
 	for(int i=0;i<out_n;i++)
 	{
 		delay_send(out_delay[i],dest,out_arr[i],out_len[i]);
