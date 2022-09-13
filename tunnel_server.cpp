@@ -30,7 +30,7 @@ void data_from_remote_or_fec_timeout_or_conn_timer(conn_info_t & conn_info,fd64_
 
 	//conn_info_t &conn_info=conn_manager.find(ip_port);
 	// 轮询每个addr
-	address_t &addr=conn_info.addrs[addr_counter++%conn_info.n_addr];
+	// address_t &addr=conn_info.addrs[addr_counter++%conn_info.n_addr];
 	address_t &addr_ori=conn_info.addr;
 	assert(conn_manager.exist(addr_ori));
 
@@ -40,7 +40,7 @@ void data_from_remote_or_fec_timeout_or_conn_timer(conn_info_t & conn_info,fd64_
 
 	dest_t dest;
 	dest.inner.fd_addr.fd=local_listen_fd;
-	dest.inner.fd_addr.addr=addr;
+	// dest.inner.fd_addr.addr=addr;
 	dest.type=type_fd_addr;
 	dest.cook=1;
 
@@ -73,7 +73,7 @@ void data_from_remote_or_fec_timeout_or_conn_timer(conn_info_t & conn_info,fd64_
 		from_normal_to_fec(conn_info,0,0,out_n,out_arr,out_len,out_delay);
 		}
 
-		conn_info.stat.report_as_server(addr);
+		conn_info.stat.report_as_server(addr_ori);
 		return;
 	}
 	else if(mode==is_from_remote)
@@ -128,6 +128,8 @@ void data_from_remote_or_fec_timeout_or_conn_timer(conn_info_t & conn_info,fd64_
 
 	mylog(log_trace,"out_n=%d\n",out_n);
 	if (out_n > 0) {
+		address_t &addr=conn_info.addrs[addr_counter++%conn_info.n_addr];
+		dest.inner.fd_addr.addr = addr;
 		mylog(log_info, "send packet to: %s\n", dest.inner.fd_addr.addr.get_str());
 	}
 	for(int i=0;i<out_n;i++)
