@@ -191,11 +191,16 @@ int my_send(const dest_t &dest,char *data,int len)
 	}
 	if(dest.tag)
 	{
-		char *new_data = (char *)malloc(len+sizeof(u32_t));
-		write_u32(new_data, client_tag);
-		memcpy(new_data+sizeof(u32_t),data,len);
-		len = len + sizeof(u32_t);
-		data = new_data;
+		// char *new_data = (char *)malloc(len+sizeof(u32_t));
+		// write_u32(new_data, client_tag);
+		// memcpy(new_data+sizeof(u32_t),data,len);
+		// len = len + sizeof(u32_t);
+		// data = new_data;
+		char data2[buf_len];
+		write_u32(data2, client_tag);
+		memcpy(data+sizeof(u32_t),data,len);
+		len=len+sizeof(u32_t);
+		data=data2;
 	}
 	
 	switch(dest.type)
