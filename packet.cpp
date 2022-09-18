@@ -198,7 +198,7 @@ int my_send(const dest_t &dest,char *data,int len)
 		// data = new_data;
 		char data2[buf_len];
 		write_u32(data2, client_tag);
-		memcpy(data+sizeof(u32_t),data,len);
+		memcpy(data2+sizeof(u32_t),data,len);
 		len=len+sizeof(u32_t);
 		data=data2;
 	}
