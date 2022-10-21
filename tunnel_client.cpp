@@ -14,7 +14,9 @@ void data_from_local_or_fec_timeout(conn_info_t & conn_info,int is_time_out)
 	dest.type=type_fd64;
 	dest.inner.fd64=remote_fd64;
 	dest.cook=1;
-
+	dest.fec=true;
+	char *str = conn_info.fec_encode_manager.get_fec_par().rs_to_str();
+	dest.fec_str=str;
 	if(is_time_out)
 	{
 		//fd64_t fd64=events[idx].data.u64;

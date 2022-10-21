@@ -382,6 +382,8 @@ struct dest_t
 	inner_t inner;
 	u32_t conv;
 	int cook=0;
+	bool fec=false;
+	char *fec_str;
 };
 
 struct fd_info_t

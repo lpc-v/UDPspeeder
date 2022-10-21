@@ -183,8 +183,26 @@ int send_fd (int fd,char * buf, int len,int flags)
 	return send(fd,buf,len,flags);
 }
 
+
+u32_t my_strlen(char* str)
+{
+    char* start = str;
+    while(*str)
+    {
+        str++;
+    }
+    return str - start;
+}
+
 int my_send(const dest_t &dest,char *data,int len)
 {
+	if(dest.fec)
+	{
+		u32_t fec_str_len = my_strlen(dest.fec_str);
+		memcpy(data+len, dest.fec_str, fec_str_len);
+		write_u32(data+len+fec_str_len, fec_str_len);
+		len = len + fec_str_len + sizeof(u32_t);
+	}
 	if(dest.cook)
 	{
 		do_cook(data,len);

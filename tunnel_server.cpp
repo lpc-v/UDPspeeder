@@ -170,7 +170,11 @@ static void local_listen_cb(struct ev_loop *loop, struct ev_io *watcher, int rev
 		return;
 	}
 
-
+	u32_t fec_str_len=read_u32(data+data_len-sizeof(u32_t));
+	static char fec_str[rs_str_len];
+	memcpy(fec_str, data+data_len-sizeof(u32_t)-fec_str_len, fec_str_len);
+	data_len=data_len-sizeof(u32_t)-fec_str_len;
+	mylog(log_info, "==> server fec from client %s\n", fec_str);
 
 	if(!conn_manager.exist(addr))
 	{
@@ -208,7 +212,8 @@ static void local_listen_cb(struct ev_loop *loop, struct ev_io *watcher, int rev
 		//fd_manager.get_info(timer_fd64).ip_port=ip_port;
 
 
-
+		conn_info.fec_encode_manager.get_fec_par().rs_from_str(fec_str);
+		mylog(log_info, "server fec param %s\n", conn_info.fec_encode_manager.get_fec_par().rs_to_str());
 	    conn_info.fec_encode_manager.set_data(&conn_info);
 	    conn_info.fec_encode_manager.set_loop_and_cb(loop,fec_encode_cb);
 
